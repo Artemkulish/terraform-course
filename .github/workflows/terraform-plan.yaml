@@ -13,13 +13,16 @@ on:
 
 env:
   TF_IN_AUTOMATION: "yes"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
   main:
+    runs-on: ubuntu-latest
+    environment: demo
     defaults:
       run:
         working-directory: terraform/002
-    runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
@@ -43,7 +46,6 @@ jobs:
     - name: Terraform Plan
       id: plan
       run: terraform plan -no-color -var ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}"
-      continue-on-error: true
 
     - uses: actions/github-script@v6
       env:
