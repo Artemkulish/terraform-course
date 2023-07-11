@@ -48,6 +48,10 @@ jobs:
       id: plan
       run: terraform plan -no-color -var ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}" -compact-warnings -out=${RUNNER_TEMP}/_plan.tf  > "${RUNNER_TEMP}/tf_plan.output"
 
+    - continue-on-error: true
+      id: tfplan_beautify
+      run: grep -v "Refreshing state\.\.\." "${RUNNER_TEMP}/tf_plan.output" | tail -c 65000 > "${RUNNER_TEMP}/tf_plan.txt"
+
     - uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
