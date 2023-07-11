@@ -13,13 +13,15 @@ on:
 
 env:
   TF_IN_AUTOMATION: "yes"
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  TF_WORKDIR: "terraform/002"
 
 jobs:
   main:
     runs-on: ubuntu-latest
     environment: demo
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     defaults:
       run:
         working-directory: terraform/002
@@ -47,25 +49,23 @@ jobs:
       id: plan
       run: terraform plan -no-color -var ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}"
 
-    # - name: Terraform Plan
-    #   id: plan
-    #   run: terraform plan -no-color -var ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}" -compact-warnings -out=${RUNNER_TEMP}/_plan.tf  > "${RUNNER_TEMP}/tf_plan.output"
-
-    # - continue-on-error: true
-    #   id: tfplan_beautify
-    #   run: grep -v "Refreshing state\.\.\." "${RUNNER_TEMP}/tf_plan.output" | tail -c 65000 > "${RUNNER_TEMP}/tf_plan.txt"
-
-    # - uses: actions/github-script@v6
-    #   with:
-    #     github-token: ${{ secrets.PAT }}
-    #     script: "const fs = require('fs');\nconst tfplan = fs.readFileSync(process.env.RUNNER_TEMP + \"/tf_plan.txt\", \"utf8\");\n\nconst output = `#### Terraform Initialization ⚙️\\`${{ steps.init.outcome }}\\`\n\n#### Terraform Plan \U0001F4D6\\`${{ steps.plan.outcome }}\\`\n<details><summary>Show Plan</summary>\n\n\\`\\`\\`\\n\n${tfplan.replace(/%0A/g,\"\\n\")}\n\\`\\`\\`\n\n</details>\n\n*Pusher: @${{ github.actor }}, Action: \\`${{ github.event_name }}\\`, Working Directory: \\`${{ env.TFPATH }}\\`, Workflow: \\`${{ github.workflow }}\\`*`;\n\ngithub.rest.issues.createComment({\n  issue_number: context.issue.number,\n  owner: context.repo.owner,\n  repo: context.repo.repo,\n  body: output\n});\n\nif (\"${{ steps.init.conclusion }}\" != \"success\") {\n  core.setFailed(\"Terraform init failed\")\n}\n\nif (\"${{ steps.plan.conclusion }}\" != \"success\") {\n  core.setFailed(\"Terraform plan failed\")\n}\n"
-
     - uses: actions/github-script@v6
       env:
         PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
       with:
         github-token: ${{ secrets.PAT }}
         script: |
+          // 1. Retrieve existing bot comments for the PR
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          })
+          const botComment = comments.find(comment => {
+            return comment.user.type === 'Bot' && comment.body.includes('Terraform Format and Style')
+          })
+
+          // 2. Prepare format of the comment
           const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
           #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
           #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
@@ -87,13 +87,21 @@ jobs:
 
           </details>
 
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TF_WORKDIR }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          })
-
-
+          // 3. If we have a comment, update it, otherwise create a new one
+          if (botComment) {
+            github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: output
+            })
+          } else {
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+          }
