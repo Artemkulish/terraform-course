@@ -32,6 +32,10 @@ jobs:
       run: terraform fmt -recursive -check
       continue-on-error: true
 
+    - name: Terraform Init
+      id: tfinit
+      run: terraform init
+
     - name: Terraform validate
       id: validate
       run: terraform validate -no-color
