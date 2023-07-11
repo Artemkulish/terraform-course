@@ -1,0 +1,33 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - 'terraform/**.tf'
+
+env:
+  TF_IN_AUTOMATION: "yes"
+
+jobs:
+  main:
+    defaults:
+      run:
+        working-directory: terraform
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Setup terraform
+      uses: hashicorp/setup-terraform@v2
+
+    - name: Terratform fmt
+      id: fmt
+      run: terraform fmt -check
+      continue-on-error: true
