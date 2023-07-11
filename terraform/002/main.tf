@@ -96,7 +96,7 @@ data "aws_ssm_parameter" "ecs_optimized_ami" {
 }
 
 resource "aws_key_pair" "this" {
-  public_key = file("./web-demo.pub")
+  public_key = try(file("./web-demo.pub"), var.ssh_public_key)
 }
 
 module "autoscaling" {
@@ -268,3 +268,4 @@ module "ecs_service" {
     }
   }
 }
+
