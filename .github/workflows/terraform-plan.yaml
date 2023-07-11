@@ -18,7 +18,7 @@ jobs:
   main:
     defaults:
       run:
-        working-directory: terraform
+        working-directory: terraform/002
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
@@ -27,7 +27,16 @@ jobs:
     - name: Setup terraform
       uses: hashicorp/setup-terraform@v2
 
-    - name: Terratform fmt
+    - name: Terraform fmt
       id: fmt
-      run: terraform fmt -check
+      run: terraform fmt -recursive -check
+      continue-on-error: true
+
+    - name: Terraform validate
+      id: validate
+      run: terraform validate -no-color
+
+    - name: Terraform Plan
+      id: plan
+      run: terraform plan -no-color
       continue-on-error: true
