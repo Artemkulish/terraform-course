@@ -15,7 +15,6 @@ env:
   TF_IN_AUTOMATION: "yes"
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  TFPATH: "terraform/002"
 
 jobs:
   main:
@@ -46,14 +45,55 @@ jobs:
 
     - name: Terraform Plan
       id: plan
-      run: terraform plan -no-color -var ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}" -compact-warnings -out=${RUNNER_TEMP}/_plan.tf  > "${RUNNER_TEMP}/tf_plan.output"
+      run: terraform plan -no-color -var ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}"
 
-    - continue-on-error: true
-      id: tfplan_beautify
-      run: grep -v "Refreshing state\.\.\." "${RUNNER_TEMP}/tf_plan.output" | tail -c 65000 > "${RUNNER_TEMP}/tf_plan.txt"
+    # - name: Terraform Plan
+    #   id: plan
+    #   run: terraform plan -no-color -var ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}" -compact-warnings -out=${RUNNER_TEMP}/_plan.tf  > "${RUNNER_TEMP}/tf_plan.output"
+
+    # - continue-on-error: true
+    #   id: tfplan_beautify
+    #   run: grep -v "Refreshing state\.\.\." "${RUNNER_TEMP}/tf_plan.output" | tail -c 65000 > "${RUNNER_TEMP}/tf_plan.txt"
+
+    # - uses: actions/github-script@v6
+    #   with:
+    #     github-token: ${{ secrets.PAT }}
+    #     script: "const fs = require('fs');\nconst tfplan = fs.readFileSync(process.env.RUNNER_TEMP + \"/tf_plan.txt\", \"utf8\");\n\nconst output = `#### Terraform Initialization ⚙️\\`${{ steps.init.outcome }}\\`\n\n#### Terraform Plan \U0001F4D6\\`${{ steps.plan.outcome }}\\`\n<details><summary>Show Plan</summary>\n\n\\`\\`\\`\\n\n${tfplan.replace(/%0A/g,\"\\n\")}\n\\`\\`\\`\n\n</details>\n\n*Pusher: @${{ github.actor }}, Action: \\`${{ github.event_name }}\\`, Working Directory: \\`${{ env.TFPATH }}\\`, Workflow: \\`${{ github.workflow }}\\`*`;\n\ngithub.rest.issues.createComment({\n  issue_number: context.issue.number,\n  owner: context.repo.owner,\n  repo: context.repo.repo,\n  body: output\n});\n\nif (\"${{ steps.init.conclusion }}\" != \"success\") {\n  core.setFailed(\"Terraform init failed\")\n}\n\nif (\"${{ steps.plan.conclusion }}\" != \"success\") {\n  core.setFailed(\"Terraform plan failed\")\n}\n"
 
     - uses: actions/github-script@v6
+      env:
+        PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
       with:
         github-token: ${{ secrets.PAT }}
-        script: "const fs = require('fs');\nconst tfplan = fs.readFileSync(process.env.RUNNER_TEMP + \"/tf_plan.txt\", \"utf8\");\n\nconst output = `#### Terraform Initialization ⚙️\\`${{ steps.init.outcome }}\\`\n\n#### Terraform Plan \U0001F4D6\\`${{ steps.plan.outcome }}\\`\n<details><summary>Show Plan</summary>\n\n\\`\\`\\`\\n\n${tfplan.replace(/%0A/g,\"\\n\")}\n\\`\\`\\`\n\n</details>\n\n*Pusher: @${{ github.actor }}, Action: \\`${{ github.event_name }}\\`, Working Directory: \\`${{ env.TFPATH }}\\`, Workflow: \\`${{ github.workflow }}\\`*`;\n\ngithub.rest.issues.createComment({\n  issue_number: context.issue.number,\n  owner: context.repo.owner,\n  repo: context.repo.repo,\n  body: output\n});\n\nif (\"${{ steps.init.conclusion }}\" != \"success\") {\n  core.setFailed(\"Terraform init failed\")\n}\n\nif (\"${{ steps.plan.conclusion }}\" != \"success\") {\n  core.setFailed(\"Terraform plan failed\")\n}\n"
+        script: |
+          const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+          #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+          #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+          <details><summary>Validation Output</summary>
+
+          \`\`\`\n
+          ${{ steps.validate.outputs.stdout }}
+          \`\`\`
+
+          </details>
+
+          #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+          <details><summary>Show Plan</summary>
+
+          \`\`\`\n
+          ${process.env.PLAN}
+          \`\`\`
+
+          </details>
+
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
 
