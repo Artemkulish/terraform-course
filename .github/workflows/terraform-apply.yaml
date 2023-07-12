@@ -8,7 +8,7 @@ on:
       - closed
 
 env:
-  TF_IN_AUTOMATION: "yes"
+  TF_IN_AUTOMATION: "true"
   TF_WORKDIR: "terraform/002"
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-          working-directory: "terraform/002"
+        working-directory: "terraform/002"
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -30,5 +30,4 @@ jobs:
         run: terraform init
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -no-color
-  
+        run: terraform apply -no-color -auto-approve -var=ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}
