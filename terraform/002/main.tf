@@ -1,3 +1,12 @@
+terraform {
+  backend "s3" {
+    bucket         = "devops-demo-tf-remote-state-001"
+    key            = "demo/terraform.tfstate"
+    dynamodb_table = "tf-remote-state-lock"
+    region         = "us-east-1"
+  }
+}
+
 provider "aws" {
   region = local.region
 

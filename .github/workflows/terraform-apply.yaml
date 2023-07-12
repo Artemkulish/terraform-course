@@ -30,4 +30,4 @@ jobs:
         run: terraform init
 
       - name: Terraform Apply
-        run: terraform apply -no-color -auto-approve -var=ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}
+        run: terraform apply -no-color -auto-approve -var=ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}"
