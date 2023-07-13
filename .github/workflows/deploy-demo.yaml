@@ -14,8 +14,6 @@ env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: "us-east-1"
-  DOCKER_REGISTRY: "020856120665.dkr.ecr.us-east-1.amazonaws.com/dev-devops-course-ecr"
-  TAG: "${{ github.run_number }}.${{ github.run_attempt }}"
 
 jobs:
   build:
@@ -32,4 +30,18 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.DOCKER_REGISTRY }}:${{ env.TAG }}
+          tags: 020856120665.dkr.ecr.us-east-1.amazonaws.com/dev-devops-course-ecr:${{ github.run_number }}.${{ github.run_attempt }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get task definition
+        run: aws ecs describe-task-definition --task-definition arn:aws:ecs:us-east-1:020856120665:task-definition/dev-devops-course:8 --query="taskDefinition" > task-definition.json
+
+      - name: Update task definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: app
+          image: 020856120665.dkr.ecr.us-east-1.amazonaws.com/dev-devops-course-ecr:${{ github.run_number }}.${{ github.run_attempt }}
