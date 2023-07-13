@@ -30,7 +30,7 @@ locals {
   vpc_cidr = "10.0.0.0/16"
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
-  container_name = "nginx"
+  container_name = "app"
   container_port = 80
 }
 
@@ -278,3 +278,7 @@ module "ecs_service" {
   }
 }
 
+resource "aws_ecr_repository" "foo" {
+  name                 = "${local.name}-ecr"
+  image_tag_mutability = "MUTABLE"
+}

@@ -1,0 +1,34 @@
+name: Deploy
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - "closed"
+  push:
+    branches:
+      - "feat/github-workflows" # TO DELETE
+
+env:
+  docker_registry: "020856120665.dkr.ecr.us-east-1.amazonaws.com/dev-devops-course-ecr"
+  tag: "${{ github.run_number }}.${{ github.run_attempt }}"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test
+        run: echo ${{ env.tag }}
+      # - name: Checkout repo
+      #   uses: actions/checkout@v3
+
+      # - name: Login to Docker registry
+      #   uses: aws-actions/amazon-ecr-login@v1
+
+      # - name: Build and push
+      #   uses: docker/build-push-action@v4
+      #   with:
+      #     context: .
+      #     push: true
+      #     tags: ${{ env.docker_registry }}:
