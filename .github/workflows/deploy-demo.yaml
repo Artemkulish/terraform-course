@@ -40,8 +40,17 @@ jobs:
         run: aws ecs describe-task-definition --task-definition arn:aws:ecs:us-east-1:020856120665:task-definition/dev-devops-course:8 --query="taskDefinition" > task-definition.json
 
       - name: Update task definition
+        id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: app
           image: 020856120665.dkr.ecr.us-east-1.amazonaws.com/dev-devops-course-ecr:${{ github.run_number }}.${{ github.run_attempt }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: dev-devops-course
+          cluster: dev-devops-course
+          wait-for-service-stability: true
