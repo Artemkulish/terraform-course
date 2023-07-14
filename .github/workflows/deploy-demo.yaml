@@ -34,15 +34,15 @@ jobs:
   #         tags: 020856120665.dkr.ecr.us-east-1.amazonaws.com/dev-devops-course-ecr:${{ github.run_number }}.${{ github.run_attempt }}
 
   deploy:
-    # needs: build
+    #needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Get
         id: get
         run: |
-          echo "some=green" >> GITHUB_OUTPUT
+          echo "test=green" >> $GITHUB_OUTPUT
       - name: Test
-        run: echo ${{ steps.get.outputs.some }}
+        run: echo ${{ steps.get.outputs.test }}
     # steps:
     #   - name: Get task definition
     #     run: aws ecs describe-task-definition --task-definition arn:aws:ecs:us-east-1:020856120665:task-definition/dev-devops-course --query="taskDefinition" > task-definition.json
