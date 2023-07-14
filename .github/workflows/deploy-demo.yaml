@@ -37,68 +37,74 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Get task definition
-        run: aws ecs describe-task-definition --task-definition arn:aws:ecs:us-east-1:020856120665:task-definition/dev-devops-course --query="taskDefinition" > task-definition.json
-
-      - name: Render task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: app
-          image: 020856120665.dkr.ecr.us-east-1.amazonaws.com/dev-devops-course-ecr:${{ github.run_number }}.${{ github.run_attempt }}
-
-      - name: Get inactive ECS service
-        id: get_ecs_service
+      - name: Get
+        id: get
         run: |
-          # Get target group arn with weight=0 (i.e. inactive one)
-          INACTIVE_TARGET_GROUP=$(aws elbv2 describe-rules --rule-arns ${{ env.ALB_LISTENER_RULE_ARN }} --query="Rules[*].Actions[*].ForwardConfig.TargetGroups[?Weight==\`0\`].TargetGroupArn" --output text)
+          echo "test=green" >> $GITHUB_OUTPUT
+      - name: Test
+        run: echo ${{ steps.get.outputs.test }}
+    # steps:
+    #   - name: Get task definition
+    #     run: aws ecs describe-task-definition --task-definition arn:aws:ecs:us-east-1:020856120665:task-definition/dev-devops-course --query="taskDefinition" > task-definition.json
 
-          if [[ ${INACTIVE_TARGET_GROUP} == *"dev-devops-course-app-blue"* ]];
-          then
-            INACTIVE_SERVICE="dev-devops-course-app-blue"
-          elif [[ ${INACTIVE_TARGET_GROUP} == *"dev-devops-course-app-green"* ]];
-          then
-            INACTIVE_TARGET_GROUP="dev-devops-course-app-green"
-          else
-            echo "Failed to find inactive service."
-            exit 1
-          fi
+    #   - name: Render task definition
+    #     id: task-def
+    #     uses: aws-actions/amazon-ecs-render-task-definition@v1
+    #     with:
+    #       task-definition: task-definition.json
+    #       container-name: app
+    #       image: 020856120665.dkr.ecr.us-east-1.amazonaws.com/dev-devops-course-ecr:${{ github.run_number }}.${{ github.run_attempt }}
 
-          echo $INACTIVE_SERVICE
-          echo "inactive_service=$INACTIVE_SERVICE" >> GITHUB_OUTPUT
-          echo "inactive_target_group=$INACTIVE_TARGET_GROUP" >> GITHUB_OUTPUT
+    #   - name: Get inactive ECS service
+    #     id: get_ecs_service
+    #     run: |
+    #       # Get target group arn with weight=0 (i.e. inactive one)
+    #       INACTIVE_TARGET_GROUP=$(aws elbv2 describe-rules --rule-arns ${{ env.ALB_LISTENER_RULE_ARN }} --query="Rules[*].Actions[*].ForwardConfig.TargetGroups[?Weight==\`0\`].TargetGroupArn" --output text)
 
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ steps.get_ecs_service.outputs.inactive_service }}
-          cluster: dev-devops-course
-          wait-for-service-stability: true
+    #       if [[ ${INACTIVE_TARGET_GROUP} == *"dev-devops-course-app-blue"* ]];
+    #       then
+    #         INACTIVE_SERVICE="dev-devops-course-app-blue"
+    #       elif [[ ${INACTIVE_TARGET_GROUP} == *"dev-devops-course-app-green"* ]];
+    #       then
+    #         INACTIVE_TARGET_GROUP="dev-devops-course-app-green"
+    #       else
+    #         echo "Failed to find inactive service."
+    #         exit 1
+    #       fi
 
-      - name: Switch traffic
-        run: |
-          echo ${{ steps.get_ecs_service.outputs.inactive_service }}
+    #       echo $INACTIVE_SERVICE
+    #       echo "inactive_service=$INACTIVE_SERVICE" >> GITHUB_OUTPUT
+    #       echo "inactive_target_group=$INACTIVE_TARGET_GROUP" >> GITHUB_OUTPUT
 
-          active_target_group=$(aws elbv2 describe-rules --rule-arns ${{ env.ALB_LISTENER_RULE_ARN }} --query="Rules[*].Actions[*].ForwardConfig.TargetGroups[?Weight==\`100\`].TargetGroupArn" --output text)
+    #   - name: Deploy Amazon ECS task definition
+    #     uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+    #     with:
+    #       task-definition: ${{ steps.task-def.outputs.task-definition }}
+    #       service: ${{ steps.get_ecs_service.outputs.inactive_service }}
+    #       cluster: dev-devops-course
+    #       wait-for-service-stability: true
 
-          # Quick check to see if target groups have not mixed up
-          if [[ ${active_target_group} == ${{ steps.get_ecs_service.outputs.inactive_target_group }} ]];
-          then
-            echo "Active target group is the same as the inactive one."
-            exit 1
-          fi
+    #   - name: Switch traffic
+    #     run: |
+    #       echo ${{ steps.get_ecs_service.outputs.inactive_service }}
 
+    #       active_target_group=$(aws elbv2 describe-rules --rule-arns ${{ env.ALB_LISTENER_RULE_ARN }} --query="Rules[*].Actions[*].ForwardConfig.TargetGroups[?Weight==\`100\`].TargetGroupArn" --output text)
 
-          aws elbv2 modify-rule --rule-arn ${{ env.ALB_LISTENER_RULE_ARN }} --actions \
-            '[{
-                "Type": "forward",
-                "Order": 1,
-                "ForwardConfig": {
-                  "TargetGroups": [
-                      {"TargetGroupArn": "${{ steps.get_ecs_service.outputs.inactive_target_group }}", "Weight": 100 },
-                      {"TargetGroupArn": "${active_target_group}", "Weight": 0 }
-                  ]
-                }
-            }]'
+    #       # Quick check to see if target groups have not mixed up
+    #       if [[ ${active_target_group} == ${{ steps.get_ecs_service.outputs.inactive_target_group }} ]];
+    #       then
+    #         echo "Active target group is the same as the inactive one."
+    #         exit 1
+    #       fi
+
+    #       aws elbv2 modify-rule --rule-arn ${{ env.ALB_LISTENER_RULE_ARN }} --actions \
+    #         '[{
+    #             "Type": "forward",
+    #             "Order": 1,
+    #             "ForwardConfig": {
+    #               "TargetGroups": [
+    #                   {"TargetGroupArn": "${{ steps.get_ecs_service.outputs.inactive_target_group }}", "Weight": 100 },
+    #                   {"TargetGroupArn": "${active_target_group}", "Weight": 0 }
+    #               ]
+    #             }
+    #         }]'
