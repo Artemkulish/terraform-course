@@ -43,7 +43,7 @@ jobs:
           INACTIVE_TARGET_GROUP=$(aws elbv2 describe-rules --rule-arns ${{ env.ALB_LISTENER_RULE_ARN }} --query="Rules[*].Actions[*].ForwardConfig.TargetGroups[?Weight==\`0\`].TargetGroupArn" --output text)
 
           echo $INACTIVE_TARGET_GROUP
-          echo "test=green" >> $GITHUB_OUTPUT
+          echo "test=${INACTIVE_TARGET_GROUP}" >> $GITHUB_OUTPUT
       - name: Test
         run: echo ${{ steps.get.outputs.test }}
     # steps:
