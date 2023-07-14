@@ -55,8 +55,9 @@ jobs:
 
           echo $INACTIVE_TARGET_GROUP
           echo "inactive_target_group=${INACTIVE_TARGET_GROUP}" >> $GITHUB_OUTPUT
+          echo "inactive_service=${INACTIVE_SERVICE}" >> $GITHUB_OUTPUT
       - name: Test
-        run: echo ${{ steps.get.outputs.inactive_target_group }}
+        run: echo ${{ steps.get.outputs.inactive_target_group }} && echo ${{ steps.get.outputs.inactive_service }}
     # steps:
     #   - name: Get task definition
     #     run: aws ecs describe-task-definition --task-definition arn:aws:ecs:us-east-1:020856120665:task-definition/dev-devops-course --query="taskDefinition" > task-definition.json
