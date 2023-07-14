@@ -66,8 +66,8 @@ jobs:
           fi
 
           echo $INACTIVE_SERVICE
-          echo inactive_service=$INACTIVE_SERVICE >> GITHUB_OUTPUT
-          echo inactive_target_group=$INACTIVE_TARGET_GROUP >> GITHUB_OUTPUT
+          echo "inactive_service=$INACTIVE_SERVICE" >> GITHUB_OUTPUT
+          echo "inactive_target_group=$INACTIVE_TARGET_GROUP" >> GITHUB_OUTPUT
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
