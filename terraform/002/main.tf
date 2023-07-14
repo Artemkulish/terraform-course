@@ -237,6 +237,10 @@ module "ecs_service" {
     }
   }
 
+  desired_count                      = 2
+  deployment_maximum_percent         = 100
+  deployment_minimum_healthy_percent = 0
+
   # Container definition(s)
   container_definitions = {
     (local.container_name) = {
