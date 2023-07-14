@@ -32,6 +32,10 @@ locals {
 
   container_name = "app"
   container_port = 80
+
+  image  = "public.ecr.aws/ecs-sample-image/amazon-ecs-sample:latest"
+  cpu    = 1024
+  memory = 970
 }
 
 
@@ -74,10 +78,41 @@ module "alb" {
 
   target_groups = [
     {
-      name             = "${local.name}-${local.container_name}"
+      name             = "${local.name}-${local.container_name}-blue"
       backend_protocol = "HTTP"
       backend_port     = local.container_port
       target_type      = "ip"
+    },
+    {
+      name             = "${local.name}-${local.container_name}-green"
+      backend_protocol = "HTTP"
+      backend_port     = local.container_port
+      target_type      = "ip"
+    }
+  ]
+
+  http_tcp_listener_rules = [
+    {
+      http_tcp_listener_index = 0
+      priority                = 10
+
+      actions = [{
+        type = "weighted-forward"
+        target_groups = [
+          {
+            target_group_index = 0
+            weight             = 100
+          },
+          {
+            target_group_index = 1
+            weight             = 0
+          }
+        ]
+      }]
+
+      conditions = [{
+        path_patterns = ["/*"]
+      }]
     },
   ]
 }
@@ -148,9 +183,9 @@ module "autoscaling" {
 
   vpc_zone_identifier = module.vpc.public_subnets
   health_check_type   = "EC2"
-  min_size            = 2
-  max_size            = 2
-  desired_capacity    = 2
+  min_size            = 4
+  max_size            = 4
+  desired_capacity    = 4
 
   # https://github.com/hashicorp/terraform-provider-aws/issues/12582
   autoscaling_group_tags = {
@@ -217,13 +252,13 @@ module "ecs_cluster" {
 
 
 ################################################
-# ECS Service
+# ECS Service - blue
 ################################################
-module "ecs_service" {
+module "ecs_service_blue" {
   source = "terraform-aws-modules/ecs/aws//modules/service"
 
   # Service
-  name        = local.name
+  name        = "${local.name}-blue"
   cluster_arn = module.ecs_cluster.arn
 
   # Task Definition
@@ -244,9 +279,9 @@ module "ecs_service" {
   # Container definition(s)
   container_definitions = {
     (local.container_name) = {
-      cpu    = 1024
-      memory = 970
-      image  = "public.ecr.aws/ecs-sample-image/amazon-ecs-sample:latest"
+      cpu    = local.cpu
+      memory = local.memory
+      image  = local.image
       port_mappings = [
         {
           name          = local.container_name
@@ -258,8 +293,8 @@ module "ecs_service" {
     }
   }
 
-  cpu    = 1024
-  memory = 970
+  cpu    = local.cpu
+  memory = local.memory
 
   load_balancer = {
     service = {
@@ -285,4 +320,70 @@ module "ecs_service" {
 resource "aws_ecr_repository" "foo" {
   name                 = "${local.name}-ecr"
   image_tag_mutability = "MUTABLE"
+}
+
+################################################
+# ECS Service - green
+################################################
+module "ecs_service_green" {
+  source = "terraform-aws-modules/ecs/aws//modules/service"
+
+  # Service
+  name        = "${local.name}-green"
+  cluster_arn = module.ecs_cluster.arn
+
+  # Task Definition
+  requires_compatibilities = ["EC2"]
+  capacity_provider_strategy = {
+    # On-demand instances
+    ex-1 = {
+      capacity_provider = module.ecs_cluster.autoscaling_capacity_providers["ex-1"].name
+      weight            = 1
+      base              = 1
+    }
+  }
+
+  desired_count                      = 0
+  deployment_maximum_percent         = 100
+  deployment_minimum_healthy_percent = 0
+
+  # Container definition(s)
+  container_definitions = {
+    (local.container_name) = {
+      cpu    = local.cpu
+      memory = local.memory
+      image  = local.image
+      port_mappings = [
+        {
+          name          = local.container_name
+          containerPort = local.container_port
+          protocol      = "tcp"
+        }
+      ]
+      readonly_root_filesystem = false
+    }
+  }
+
+  cpu    = local.cpu
+  memory = local.memory
+
+  load_balancer = {
+    service = {
+      target_group_arn = element(module.alb.target_group_arns, 1)
+      container_name   = local.container_name
+      container_port   = local.container_port
+    }
+  }
+
+  subnet_ids = module.vpc.public_subnets
+  security_group_rules = {
+    alb_http_ingress = {
+      type                     = "ingress"
+      from_port                = local.container_port
+      to_port                  = local.container_port
+      protocol                 = "tcp"
+      description              = "Service port"
+      source_security_group_id = module.alb_sg.security_group_id
+    }
+  }
 }
