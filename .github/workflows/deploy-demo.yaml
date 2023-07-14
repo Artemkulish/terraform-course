@@ -54,7 +54,7 @@ jobs:
             exit 1
           fi
 
-          echo $INACTIVE_SERVICE
+          echo $INACTIVE_TARGET_GROUP
           echo "inactive_service=${INACTIVE_SERVICE}" >> GITHUB_OUTPUT
           echo "test=${INACTIVE_TARGET_GROUP}" >> GITHUB_OUTPUT
       - name: Test
