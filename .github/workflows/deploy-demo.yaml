@@ -77,6 +77,8 @@ jobs:
 
       - name: Switch traffic
         run: |
+          echo ${{ steps.get_ecs_service.outputs.inactive_service }}
+
           active_target_group=$(aws elbv2 describe-rules --rule-arns ${{ env.ALB_LISTENER_RULE_ARN }} --query="Rules[*].Actions[*].ForwardConfig.TargetGroups[?Weight==\`100\`].TargetGroupArn" --output text)
 
           # Quick check to see if target groups have not mixed up
