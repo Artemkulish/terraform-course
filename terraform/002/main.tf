@@ -148,9 +148,9 @@ module "autoscaling" {
 
   vpc_zone_identifier = module.vpc.public_subnets
   health_check_type   = "EC2"
-  min_size            = 1
+  min_size            = 2
   max_size            = 2
-  desired_capacity    = 1
+  desired_capacity    = 2
 
   # https://github.com/hashicorp/terraform-provider-aws/issues/12582
   autoscaling_group_tags = {
