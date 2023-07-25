@@ -59,7 +59,7 @@ jobs:
             INACTIVE_SERVICE="dev-devops-course-app-blue"
           elif [[ ${INACTIVE_TARGET_GROUP} == *"dev-devops-course-app-green"* ]];
           then
-            INACTIVE_TARGET_GROUP="dev-devops-course-app-green"
+            INACTIVE_SERVICE="dev-devops-course-app-green"
           else
             echo "Failed to find inactive service."
             exit 1
