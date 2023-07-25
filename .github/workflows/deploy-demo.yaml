@@ -14,7 +14,7 @@ env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: "us-east-1"
-  ALB_LISTENER_RULE_ARN: "arn:aws:elasticloadbalancing:us-east-1:020856120665:listener/app/dev-devops-course/28555f2a3520d919/30bf617231ed304e"
+  ALB_LISTENER_RULE_ARN: "arn:aws:elasticloadbalancing:us-east-1:020856120665:listener-rule/app/dev-devops-course/28555f2a3520d919/30bf617231ed304e/1a5c43c7d3f17b61"
 
 jobs:
   build:
