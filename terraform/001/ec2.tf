@@ -23,34 +23,34 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"]
 }
 
-# resource "aws_eip" "web" {
-#   for_each = local.ec2_instances
+resource "aws_eip" "web" {
+  for_each = local.ec2_instances
 
-#   instance = aws_instance.web[each.key].id
-# }
+  instance = aws_instance.web[each.key].id
+}
 
-# resource "aws_instance" "web" {
-#   for_each = local.ec2_instances
+resource "aws_instance" "web" {
+  for_each = local.ec2_instances
 
-#   ami               = data.aws_ami.ubuntu.id
-#   instance_type     = each.value.type
-#   security_groups   = [aws_security_group.web.name]
-#   key_name          = aws_key_pair.web.key_name
-#   availability_zone = each.value.az
+  ami               = data.aws_ami.ubuntu.id
+  instance_type     = each.value.type
+  security_groups   = [aws_security_group.web.name]
+  key_name          = aws_key_pair.web.key_name
+  availability_zone = each.value.az
 
-#   user_data = <<EOF
-# #!/bin/bash
+  user_data = <<EOF
+#!/bin/bash
 
-# apt update
-# apt install -y nginx
+apt update
+apt install -y nginx
 
-# echo "<center>Hello from EC2 instance! My AZ is $(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone) <br> My hostname is $(curl -s http://169.254.169.254/latest/meta-data/hostname)" > /var/www/html/index.html
-# EOF
+echo "<center>Hello from EC2 instance! My AZ is $(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone) <br> My hostname is $(curl -s http://169.254.169.254/latest/meta-data/hostname)" > /var/www/html/index.html
+EOF
 
-#   tags = {
-#     Name = "${local.name_prefix}-web-${each.key}"
-#   }
-# }
+  tags = {
+    Name = "${local.name_prefix}-web-${each.key}"
+  }
+}
 
 resource "aws_key_pair" "web" {
   public_key = file("${path.root}/demo_rsa.pub")
