@@ -139,10 +139,6 @@ data "aws_ssm_parameter" "ecs_optimized_ami" {
   name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended"
 }
 
-resource "aws_key_pair" "this" {
-  public_key = try(file("./web-demo.pub"), var.ssh_public_key)
-}
-
 module "autoscaling" {
   source  = "terraform-aws-modules/autoscaling/aws"
   version = "~> 6.5"
@@ -167,7 +163,6 @@ module "autoscaling" {
   security_groups                 = [module.autoscaling_sg.security_group_id]
   user_data                       = base64encode(each.value.user_data)
   ignore_desired_capacity_changes = true
-  key_name                        = aws_key_pair.this.key_name
 
   network_interfaces = [{
     associate_public_ip_address = true
