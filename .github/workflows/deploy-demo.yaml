@@ -91,13 +91,13 @@ jobs:
           fi
 
           aws elbv2 modify-rule --rule-arn ${{ env.ALB_LISTENER_RULE_ARN }} --actions \
-            '[{
-                "Type": "forward",
-                "Order": 1,
-                "ForwardConfig": {
-                  "TargetGroups": [
-                      {"TargetGroupArn": "${{ steps.get_ecs_service.outputs.inactive_target_group }}", "Weight": 100 },
-                      {"TargetGroupArn": "${active_target_group}", "Weight": 0 }
+            "[{
+                \"Type\": \"forward\",
+                \"Order\": 1,
+                \"ForwardConfig\": {
+                  \"TargetGroups\": [
+                      {\"TargetGroupArn\": \"${{ steps.get_ecs_service.outputs.inactive_target_group }}\", \"Weight\": 100 },
+                      {\"TargetGroupArn\": \"${active_target_group}\", \"Weight\": 0 }
                   ]
                 }
-            }]'
+            }]"
