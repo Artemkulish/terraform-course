@@ -343,7 +343,7 @@ module "ecs_service_green" {
     }
   }
 
-  desired_count                      = 0
+  desired_count                      = 2
   deployment_maximum_percent         = 100
   deployment_minimum_healthy_percent = 0
 
