@@ -1,17 +1,17 @@
-name: "Release test"
+# name: "Release test"
 
-on:
-  release:
-    types: [released]
-  workflow_dispatch:
+# on:
+#   release:
+#     types: [released]
+#   workflow_dispatch:
 
-jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
+# jobs:
+#   test:
+#     name: Test
+#     runs-on: ubuntu-latest
+#     permissions:
+#       contents: read
 
-    steps:
-      - name: test
-        run: echo ${{ github.ref_name }}
+#     steps:
+#       - name: test
+#         run: echo ${{ github.ref_name }}
