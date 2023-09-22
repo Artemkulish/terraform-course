@@ -1,103 +1,103 @@
-name: Terraform Plan
+# name: Terraform Plan
 
-on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - synchronize
-      - reopened
-    paths:
-      - "terraform/**.tf"
+# on:
+#   pull_request:
+#     branches:
+#       - main
+#     types:
+#       - opened
+#       - synchronize
+#       - reopened
+#     paths:
+#       - "terraform/**.tf"
 
-env:
-  TF_IN_AUTOMATION: "true"
-  TF_WORKDIR: "terraform/002"
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+# env:
+#   TF_IN_AUTOMATION: "true"
+#   TF_WORKDIR: "terraform/002"
+#   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-jobs:
-  tfcheck:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: terraform/002
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+# jobs:
+#   tfcheck:
+#     runs-on: ubuntu-latest
+#     defaults:
+#       run:
+#         working-directory: terraform/002
+#     steps:
+#       - name: Checkout repo
+#         uses: actions/checkout@v3
 
-      - name: Setup terraform
-        uses: hashicorp/setup-terraform@v2
+#       - name: Setup terraform
+#         uses: hashicorp/setup-terraform@v2
 
-      - name: Terraform fmt
-        id: fmt
-        run: terraform fmt -recursive -check
-        continue-on-error: true
+#       - name: Terraform fmt
+#         id: fmt
+#         run: terraform fmt -recursive -check
+#         continue-on-error: true
 
-      - name: Terraform Init
-        id: init
-        run: terraform init
+#       - name: Terraform Init
+#         id: init
+#         run: terraform init
 
-      - name: Terraform validate
-        id: validate
-        run: terraform validate -no-color
+#       - name: Terraform validate
+#         id: validate
+#         run: terraform validate -no-color
 
-      - name: Terraform Plan
-        id: plan
-        run: terraform plan -no-color -var ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}"
+#       - name: Terraform Plan
+#         id: plan
+#         run: terraform plan -no-color -var ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}"
 
-      - uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.PAT }}
-          script: |
-            // 1. Retrieve existing bot comments for the PR
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            })
-            const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes('Terraform Format and Style')
-            })
+#       - uses: actions/github-script@v6
+#         with:
+#           github-token: ${{ secrets.PAT }}
+#           script: |
+#             // 1. Retrieve existing bot comments for the PR
+#             const { data: comments } = await github.rest.issues.listComments({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               issue_number: context.issue.number,
+#             })
+#             const botComment = comments.find(comment => {
+#               return comment.user.type === 'Bot' && comment.body.includes('Terraform Format and Style')
+#             })
 
-            // 2. Prepare format of the comment
-            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            <details><summary>Validation Output</summary>
+#             // 2. Prepare format of the comment
+#             const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+#             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+#             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+#             <details><summary>Validation Output</summary>
 
-            \`\`\`\n
-            ${{ steps.validate.outputs.stdout }}
-            \`\`\`
+#             \`\`\`\n
+#             ${{ steps.validate.outputs.stdout }}
+#             \`\`\`
 
-            </details>
+#             </details>
 
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+#             #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
 
-            <details><summary>Show Plan</summary>
+#             <details><summary>Show Plan</summary>
 
-            \`\`\`\n
-            ${{ steps.plan.outputs.stdout }}
-            \`\`\`
+#             \`\`\`\n
+#             ${{ steps.plan.outputs.stdout }}
+#             \`\`\`
 
-            </details>
+#             </details>
 
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TF_WORKDIR }}\`, Workflow: \`${{ github.workflow }}\`*`;
+#             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TF_WORKDIR }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
-            // 3. If we have a comment, update it, otherwise create a new one
-            if (botComment) {
-              github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: output
-              })
-            } else {
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: output
-              })
-            }
+#             // 3. If we have a comment, update it, otherwise create a new one
+#             if (botComment) {
+#               github.rest.issues.updateComment({
+#                 owner: context.repo.owner,
+#                 repo: context.repo.repo,
+#                 comment_id: botComment.id,
+#                 body: output
+#               })
+#             } else {
+#               github.rest.issues.createComment({
+#                 issue_number: context.issue.number,
+#                 owner: context.repo.owner,
+#                 repo: context.repo.repo,
+#                 body: output
+#               })
+#             }

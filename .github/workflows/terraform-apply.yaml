@@ -1,33 +1,33 @@
-name: Terraform Apply
+# name: Terraform Apply
 
-on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - closed
+# on:
+#   pull_request:
+#     branches:
+#       - main
+#     types:
+#       - closed
 
-env:
-  TF_IN_AUTOMATION: "true"
-  TF_WORKDIR: "terraform/002"
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+# env:
+#   TF_IN_AUTOMATION: "true"
+#   TF_WORKDIR: "terraform/002"
+#   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-jobs:
-  tfapply:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: "terraform/002"
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+# jobs:
+#   tfapply:
+#     runs-on: ubuntu-latest
+#     defaults:
+#       run:
+#         working-directory: "terraform/002"
+#     steps:
+#       - name: Checkout repo
+#         uses: actions/checkout@v3
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v2
 
-      - name: Terraform Init
-        run: terraform init
+#       - name: Terraform Init
+#         run: terraform init
 
-      - name: Terraform Apply
-        run: terraform apply -no-color -auto-approve -var=ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}"
+#       - name: Terraform Apply
+#         run: terraform apply -no-color -auto-approve -var=ssh_public_key="${{ secrets.SSH_PUBLIC_KEY }}"

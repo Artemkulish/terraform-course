@@ -1,0 +1,20 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: test
+        run: |
+          echo "The base_ref is ${{ github.base_ref }}"
+          echo "The event is ${{ github.event }}"
+          echo "The head ref is ${{ github.head_ref }}"
+          echo "The ref is ${{ github.ref }}"
+          echo "The ref_name is ${{ github.ref_name }}"
